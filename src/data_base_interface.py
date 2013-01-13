@@ -7,6 +7,34 @@ class dataBaseInterface(object):
         self.conn = sqlite3.connect("db/kdkgas.db")
         self.cursor = self.conn.cursor()
 
+    #######################################################
+    #
+    #  Section with new Database calls:
+    #
+    #######################################################
+    def getHeBankVolume(self):
+        return 50
+    
+    def getO2BankVolume(self):
+        return 50
+
+    def getHeBankPressure(self):
+        return 150
+                
+    def getO2BankPressure(self):
+        return 110
+
+    def writeHeBankPressure(self, p):
+        print "Helium bank pressure: %d" % p
+    
+    def writeO2BankPressure(self, p):
+        print "Oxygen bank pressure: %d" % p
+
+    def moneyToPay(self, price, customer):
+        print customer + "skall betala " + price + " kr"
+
+    #######################################################
+    
     def queryfetchall(self, sql):
         """Returns a sqlite fetchall()"""
         self.cursor.execute(sql)
