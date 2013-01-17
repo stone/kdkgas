@@ -78,7 +78,7 @@ class dataBaseInterface(object):
     """Class used for databas interfacing"""
 
     def __init__(self):
-        if os.path.isfile(DATABASEPATH) != -1:
+        if not os.path.isfile(DATABASEPATH):
             create_db()
 
     #######################################################

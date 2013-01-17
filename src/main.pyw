@@ -2,9 +2,9 @@
 import sys
 from PySide.QtGui import *
 from PySide import QtCore
-from mainWindow import Ui_MainWindow
-from gasdb import *
-from gasCalulations import *
+from kdkgas.mainWindow import Ui_MainWindow
+from kdkgas.gasdb import *
+from kdkgas.gasCalulations import *
 
 enable = True
 disable = False
