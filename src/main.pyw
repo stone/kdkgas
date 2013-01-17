@@ -3,7 +3,7 @@ import sys
 from PySide.QtGui import *
 from PySide import QtCore
 from mainWindow import Ui_MainWindow
-from data_base_interface import *
+from gasdb import *
 from gasCalulations import *
 
 enable = True
