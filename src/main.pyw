@@ -20,6 +20,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.db = dataBaseInterface()
 
+            # Create actions
+            exitAction = QAction('&Exit', self)
+            exitAction.setShortcut('Ctrl+Q')
+            exitAction.setStatusTip('Exit application')
+            exitAction.triggered.connect(self.close)
+
+            
+            #Add file menu
+            fileMenu = self.menuBar.addMenu('&File')
+            fileMenu.addAction(exitAction)
+
+            self.addDbActions()
+        
             # Fill GUI
             self.fillercomboBox.addItem("")
             for item in self.db.getFillers():
@@ -50,8 +63,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.gasBuyercomboBox.activated[str].connect(self.on_gasBuyercombBox_changed)
             self.tankNrcomboBox.activated[str].connect(self.on_tankNrcomboBox_changed)
 
+            #Set the tab order
+            #QGraphicsWidget.setTabOrder(self.fillercomboBox, self.gasBuyercomboBox)
+            #QGraphicsWidget.setTabOrder(self.gasBuyercomboBox, bottleSizecomboBox)
+            
+            
             self.updateUiStart()
 
+        def addDbActions(self):            
+            addFillerAction = QAction('&Addera fyllare', self)
+            addFillerAction.setStatusTip('Lagg till en person som kan fylla gas')
+            addFillerAction.triggered.connect(self.addFiller)
+
+            addBuyerAction = QAction('Addera gaskopare', self)
+            addBuyerAction.setStatusTip('Lagg till en person som kan kopa gas')
+
+            addTankAction = QAction('Ny flaska', self)
+            addTankAction.setStatusTip('Lagg till en ny flaska')
+            
+
+            #Add databas menu
+            dbMenu = self.menuBar.addMenu('&Databas')
+            dbMenu.addAction(addFillerAction)
+            dbMenu.addAction(addBuyerAction)
+            dbMenu.addAction(addTankAction)
+
+        def addFiller(self):
+            self.message("En ny fyllare skall laggas till")  
+        def addByuer(self):
+            self.message("En ny kund skall laggas till")  
+        def addTank(self):
+            self.message("En ny flaska skall laggas till")         
+
+        
+            
         def updateUiStart(self):
             self.prCalcpushButton.setEnabled(enable)
             self.PaymentpushButton.setEnabled(disable)
@@ -77,68 +122,71 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.startFillpushButton.setEnabled(disable)
 
         def message(self, string):
-            MessageBox.information(self,
-                                   "QMessageBox.information()", string)
+            QMessageBox.information(self,
+                                   "kdkGas information", string)
+
+        def checkForEmpty(self, string, obj):
+
+            if isinstance(obj, QComboBox):
+                check = obj.currentText()
+            elif isinstance(obj, QLineEdit):
+                check = obj.text()
+                
+            if check == "":
+                self.message(string)
+                obj.setFocus()
+                return True
+            else:
+                return False
                 
         def on_prCalcpushButton_clicked(self):
 
             # Check that all fields are filled in
-            if self.fillercomboBox.currentText() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Fyllare maste vara ifyllt")
+            if self.checkForEmpty("Fyllare maste vara ifyllt", self.fillercomboBox):
                 return
 
-            if self.gasBuyercomboBox.currentText() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Gaskopare maste vara ifyllt")
+            if self.checkForEmpty("Gaskopare maste vara ifyllt", self.gasBuyercomboBox):
                 return
 
-            if self.bottleSizecomboBox.currentText() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Flaskstorlek maste vara ifyllt")
+            if self.checkForEmpty("Flaskstorlek maste vara ifyllt", self.bottleSizecomboBox):
                 return
 
-            if self.maxTryckcomboBox.currentText() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Maxtrycket for flaskan maste vara ifyllt")
+            if self.checkForEmpty("Maxtrycket for flaskan maste vara ifyllt", self.maxTryckcomboBox):
+                self.maxTryckcomboBox.setFocus()
                 return
                 
-            if self.finalPressurelineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "sluttrycket maste vara ifyllt")
-                return
-            
-            if self.flaskTrycklineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "nuvarande tryck maste vara ifyllt")
-                return
-            if self.partialO2lineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Nuvarande partialtryck for Oxygen maste vara ifyllt")
-                return
-            if self.PartialHelineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Nuvarande partialtryck for Helium maste vara ifyllt")
-                return
-            
-            if self.finalPHelineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Onskat partialtryck for Helium maste vara ifyllt")
+            if self.checkForEmpty("sluttrycket maste vara ifyllt", self.finalPressurelineEdit):
+                self.finalPressurelineEdit.setFocus()
                 return
 
-            if self.finalPO2lineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Onskat partialtryck for Oxygen maste vara ifyllt")
+            if self.checkForEmpty("nuvarande tryck maste vara ifyllt", self.flaskTrycklineEdit):
+                self.flaskTrycklineEdit.setFocus()
+                return
+
+            if self.checkForEmpty("Nuvarande partialtryck for Oxygen maste vara ifyllt",
+                                  self.partialO2lineEdit):
+                self.partialO2lineEdit.setFocus()
+                return
+
+            if self.checkForEmpty("Nuvarande partialtryck for Helium maste vara ifyllt",
+                                      self.PartialHelineEdit):
+                self.PartialHelineEdit.setFocus()
+                return
+
+            if self.checkForEmpty("Onskat partialtryck for Helium maste vara ifyllt",
+                                      self.finalPHelineEdit):
+                return
+
+            if self.checkForEmpty("Onskat partialtryck for Oxygen maste vara ifyllt",
+                                      self.finalPO2lineEdit):
                 return
                 
-            if self.bankHeTryckBeforelineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Trycket i bankflaskan för Helium måste vara ifyllt")
+            if self.checkForEmpty("Trycket i bankflaskan för Helium måste vara ifyllt",
+                                      self.bankHeTryckBeforelineEdit):
                 return
-            
-            if self.O2BankTryckBeforelineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Trycket i bankflaskan för Oxygen måste vara ifyllt")
+
+            if self.checkForEmpty("Trycket i bankflaskan för Oxygen måste vara ifyllt",
+                                      self.O2BankTryckBeforelineEdit):
                 return
 
             
@@ -176,8 +224,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.HeTank = Tank(0, 0, 100, 100, self.HeBankSize, self.pHebank, 0)
                 self.O2Tank = Tank(100, 100, 0, 0, self.O2BankSize, self.pO2bank, 0)
             except GasCalcError as e:
-                QMessageBox.information(self,
-                        "QMessageBox.information()", str(e))
+                self.message(str(e))
                 return
                 
             
@@ -201,23 +248,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 print "O2BankEndPressure: %d" % O2BankEndPressure
                 print "O2BankEndPressure: " + self.o2FyllTryckLabel.text()
                 if O2BankEndPressure < int(self.o2FyllTryckLabel.text()):
-                    QMessageBox.information(self,
-                                        "QMessageBox.information()",
-                                        "Trycket i oxygen bankflaskan ar for lagt for att kunna fylla dykflaskan!")
+                    self.message("Trycket i oxygen bankflaskan ar for lagt for att kunna fylla dykflaskan!")
                     self.updateUiStart()
                     return
                 
                 if HeBankEndPressure < int(self.HeFyllTryckHelabel.text()):
-                    QMessageBox.information(self,
-                                        "QMessageBox.information()",
-                                        "Trycket i Helium bankflaskan ar for lagt for att kunna fylla dykflaskan!")
+                    self.message("Trycket i Helium bankflaskan ar for lagt for att kunna fylla dykflaskan!")
                     self.updateUiStart()
                     return
 
                 if minP > O2BankEndPressure + HeBankEndPressure:
-                    QMessageBox.information(self,
-                                        "QMessageBox.information()",
-                                        "Trycket i bankflaskorna ar for lagt for att kunna fylla dykflaskan!")
+                    self.message("Trycket i bankflaskorna ar for lagt for att kunna fylla dykflaskan!")
                     
                     self.updateUiStart()
                     return
@@ -225,13 +266,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 #Calculate if any gas must be dumped
                 dump = False
                 min_start = self.gas_calc.getTankPressure()
+
+                if self.gas_calc.getO2FillPressure() < 0:
+                    min_start = self.gas_calc.getEndPressure(self.gas_calc.getFilledO2Gas());
+                    dump = True
+
+                if self.gas_calc.getHeFillPressure() < 0:
+                    He_min_start = self.gas_calc.getEndPressure(self.gas_calc.getFilledHeGas());
+                    dump = True
+                    if He_min_start < min_start:
+                        min_start = He_min_start
+                        
                 
                 if O2BankEndPressure < HeBankEndPressure:
 
                     #Start with O2, since it has the lowest end pressure in this case
                     if O2BankEndPressure < O2EndPressure:
-                        min_start = O2BankEndPressure - self.gas_calc.getO2FillPressure()
+                        O2min_start = O2BankEndPressure - self.gas_calc.getO2FillPressure()
                         dump = True
+                        if O2min_start < min_start:
+                            min_start = O2min_start
                         
                     if HeBankEndPressure < (min_start + self.gas_calc.getO2FillPressure() +
                                             self.gas_calc.getHeFillPressure()):
@@ -246,7 +300,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     O2EndPressure = self.gas_calc.getHeEndPressure(HeEndPressure)
                     
                     if HeBankEndPressure < HeEndPressure:
-                        min_start = HeBankEndPressure - self.gas_calc.getHeFillPressure()
+                        Hemin_start= HeBankEndPressure - self.gas_calc.getHeFillPressure()
+                        if Hemin_start < min_start:
+                            min_start = Hemin_start
                         dump = True
 
                     if O2BankEndPressure < (min_start + self.gas_calc.getHeFillPressure() +
@@ -256,65 +312,56 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         dump = True
 
                 if dump:
-                    QMessageBox.information(self, "QMessageBox.information()",
-                                            "Slapp ut gas till %d Bar är kvar i flaskan" % min_start)
+                    self.message("Slapp ut gas till %d Bar är kvar i flaskan och starta sedan om fyllningen" % min_start)
                     self.gas_calc.setStartPressure(min_start)                   
                     O2EndPressure = self.gas_calc.getO2EndPressure(self.gas_calc.getTankPressure())
                     HeEndPressure = self.gas_calc.getHeEndPressure(O2EndPressure)
-
+                    
+                    self.updateUiStart()
+                    return
                     
                 if O2BankEndPressure < HeBankEndPressure:                   
                     O2EndPressure = self.gas_calc.getO2EndPressure(self.gas_calc.getTankPressure())
                     HeEndPressure = self.gas_calc.getHeEndPressure(O2EndPressure)   
-                    QMessageBox.information(self,"QMessageBox.information()",
-                                        "Fyll Oxygen till %d Bar" % O2EndPressure)                
-                    QMessageBox.information(self,"QMessageBox.information()",
-                                        "Fyll Helium till %d Bar" % self.gas_calc.getHeEndPressure(O2EndPressure))
-                    QMessageBox.information(self,"QMessageBox.information()",
-                                        "Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
+                    self.message("Fyll Oxygen till %d Bar" % O2EndPressure)                
+                    self.message("Fyll Helium till %d Bar" % self.gas_calc.getHeEndPressure(O2EndPressure))
+                    self.message("Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
                 else:                   
                     HeEndPressure = self.gas_calc.getHeEndPressure(self.gas_calc.getTankPressure())
                     O2EndPressure = self.gas_calc.getHeEndPressure(HeEndPressure)   
-                    QMessageBox.information(self,"QMessageBox.information()",
-                                        "Fyll Helium till %d Bar" % HeEndPressure)                
-                    QMessageBox.information(self,"QMessageBox.information()",
-                                        "Fyll Helium till %d Bar" % O2EndPressure)
-                    QMessageBox.information(self,"QMessageBox.information()",
-                                        "Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
+                    self.message("Fyll Helium till %d Bar" % HeEndPressure)                
+                    self.message("Fyll Helium till %d Bar" % O2EndPressure)
+                    self.message("Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
                     
-                    
+                self.O2AnalyseratlineEdit.setFocus()
+                
               
                 self.updateUiAfterFill()
                 
             except GasCalcError as e:
-                QMessageBox.information(self,
-                        "QMessageBox.information()", str(e))
+                self.message(str(e))
                     
         def on_analyzeReady_clicked(self):
 
             if self.HeAnalyseratlineEdit.text() == "" and self.finalPHelineEdit.text() != str(0):
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Analyserat partialtryck for Helium maste vara ifyllt")
+                self.message("Analyserat partialtryck for Helium maste vara ifyllt")
+                self.HeAnalyseratlineEdit.setFocus()
                 return
 
-            if self.luftAnalyseratlineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Trycket i flaskan efter fyllning är inte ifyllt")
+            if self.checkForEmpty("Trycket i flaskan efter fyllning är inte ifyllt",
+                                  self.luftAnalyseratlineEdit):
                 return
             
-            if self.O2AnalyseratlineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Analyserat partialtryck for Oxygen maste vara ifyllt")
+            if self.checkForEmpty("Analyserat partialtryck for Oxygen maste vara ifyllt",
+                                  self.O2AnalyseratlineEdit):
                 return
 
-            if self.HeBankTryckAfterlineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Trycket efter fyllning för Helium bank flaskan maste vara ifyllt")
+            if self.checkForEmpty("Trycket efter fyllning för Helium bank flaskan maste vara ifyllt",
+                                  self.HeBankTryckAfterlineEdit):
                 return
             
-            if self.O2BankTryckAfterlineEdit.text() == "":
-                QMessageBox.information(self,
-                        "QMessageBox.information()", "Trycket efter fyllning för Oxygen bank flaskan maste vara ifyllt")
+            if self.checkForEmpty("Trycket efter fyllning för Oxygen bank flaskan maste vara ifyllt",
+                                  self.O2BankTryckAfterlineEdit):
                 return
                     
 
@@ -336,8 +383,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
 
             #Calculate the price
-            HeCost = filledHe * self.db.getHePrice()
-            O2Cost = filledO2 * self.db.getO2Price()
+            HeCost = filledHe * self.db.getHePrice().price
+            O2Cost = filledO2 * self.db.getO2Price().price
             self.Prislabel.setText(str(round(HeCost + O2Cost, 2)))
                 
             self.updateUiAfterAnalyze()
@@ -354,7 +401,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.luftAnalyseratlineEdit.setText("")
 
             self.db.moneyToPay(self.Prislabel.text(), self.customer)
-                
+            self.gasBuyercomboBox.setFocus()
+            
             self.updateUiFill()
                 
         def on_gasBuyercombBox_changed(self, arg):        
@@ -371,8 +419,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.finalPressurelineEdit.insert(max_press)
                                                 
     except Exception as e:
-        QMessageBox.information(self,
-                "QMessageBox.information()", str(e))
+        self.message(str(e))
 
        
 app = QApplication(sys.argv)

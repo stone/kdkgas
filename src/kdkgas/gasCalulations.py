@@ -47,6 +47,11 @@ class Tank(object):
         newP_pascal = self.barToPascal(newP)
         return self.gas_calc.getFilledGas(oldP_pascal, newP_pascal, size)
 
+
+    def getO2Fraction(self):
+        return self.gas_calc.fO2_old
+    def getHeFraction(self):
+        return self.gas_calc.fHe_old
         
     def getO2FillPressure(self):
         return self.pascalToBar(self.gas_calc.getO2FillPressure())
