@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Sun Jan 06 18:10:41 2013
+# Created: Sun Jan 27 12:27:40 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -306,7 +306,7 @@ class Ui_MainWindow(object):
         self.gridLayout_3.addWidget(self.label_32, 0, 3, 1, 1)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtGui.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 720, 22))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 720, 18))
         self.menuBar.setObjectName("menuBar")
         MainWindow.setMenuBar(self.menuBar)
         self.mainToolBar = QtGui.QToolBar(MainWindow)
@@ -318,6 +318,29 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        MainWindow.setTabOrder(self.fillercomboBox, self.gasBuyercomboBox)
+        MainWindow.setTabOrder(self.gasBuyercomboBox, self.tankNrcomboBox)
+        MainWindow.setTabOrder(self.tankNrcomboBox, self.bottleSizecomboBox)
+        MainWindow.setTabOrder(self.bottleSizecomboBox, self.maxTryckcomboBox)
+        MainWindow.setTabOrder(self.maxTryckcomboBox, self.finalPressurelineEdit)
+        MainWindow.setTabOrder(self.finalPressurelineEdit, self.finalPO2lineEdit)
+        MainWindow.setTabOrder(self.finalPO2lineEdit, self.finalPHelineEdit)
+        MainWindow.setTabOrder(self.finalPHelineEdit, self.flaskTrycklineEdit)
+        MainWindow.setTabOrder(self.flaskTrycklineEdit, self.partialO2lineEdit)
+        MainWindow.setTabOrder(self.partialO2lineEdit, self.PartialHelineEdit)
+        MainWindow.setTabOrder(self.PartialHelineEdit, self.bankHeTryckBeforelineEdit)
+        MainWindow.setTabOrder(self.bankHeTryckBeforelineEdit, self.O2BankTryckBeforelineEdit)
+        MainWindow.setTabOrder(self.O2BankTryckBeforelineEdit, self.HeBankVolymlineEdit)
+        MainWindow.setTabOrder(self.HeBankVolymlineEdit, self.O2BankVolymlineEdit)
+        MainWindow.setTabOrder(self.O2BankVolymlineEdit, self.prCalcpushButton)
+        MainWindow.setTabOrder(self.prCalcpushButton, self.startFillpushButton)
+        MainWindow.setTabOrder(self.startFillpushButton, self.O2AnalyseratlineEdit)
+        MainWindow.setTabOrder(self.O2AnalyseratlineEdit, self.HeAnalyseratlineEdit)
+        MainWindow.setTabOrder(self.HeAnalyseratlineEdit, self.luftAnalyseratlineEdit)
+        MainWindow.setTabOrder(self.luftAnalyseratlineEdit, self.HeBankTryckAfterlineEdit)
+        MainWindow.setTabOrder(self.HeBankTryckAfterlineEdit, self.O2BankTryckAfterlineEdit)
+        MainWindow.setTabOrder(self.O2BankTryckAfterlineEdit, self.AnalyzeReadypushButton)
+        MainWindow.setTabOrder(self.AnalyzeReadypushButton, self.PaymentpushButton)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
