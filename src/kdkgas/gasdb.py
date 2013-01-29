@@ -1,4 +1,5 @@
 from peewee import *
+import datetime
 import os.path
 """Here we handle our databases, we use PeeWee for abstraction:
 
@@ -15,25 +16,46 @@ class BaseModel(Model):
         database = db
 
 class Filler(BaseModel):
+    """The person that are allowed to mix gas and fill """
     name = CharField()
 
 class Buyer(BaseModel):
+    """The person that is buying gas """
     name = CharField()
 
 class Bottle(BaseModel):
+    """A Bottle used for gas"""
     owner = ForeignKeyField(Buyer, related_name='buyer')
     size = IntegerField()
     maxpres = IntegerField()
 
 class Price(BaseModel):
+    """Price of gas"""
     name = CharField()
     price = FloatField()
 
 class Bank(BaseModel):
+    """Gas bank"""
     name = CharField()
     volume = FloatField()
     cur_pressure = FloatField()
     max_pressure = FloatField()
+
+class Gas(BaseModel):
+    """Used in FillLog to keep track of amount of gas filled"""
+    name = CharField()
+    volume = FloatField()
+
+class FillLog(BaseModel):
+    """Log of filles, who, when what..."""
+    fill_date = DateTimeField(default=datetime.datetime.now)
+    bottle = ForeignKeyField(Bottle, related_name='bottle')
+    filler = ForeignKeyField(Filler, related_name='filler')
+    buyer = ForeignKeyField(Buyer, related_name='buyer')
+    gas_amount = ForeignKeyField(Gas, related_name='gas')
+    start_pressure = FloatField()
+    end_pressure = FloatField()
+
 
 def create_db():
     """This needs to be called on when first creating the database,
@@ -41,17 +63,25 @@ def create_db():
     import random
     print "Creating database, filling with test data, hang on..."
     print "Creating tables..."
+
+    print "\t- Filler"
     Filler.create_table()
+    print "\t- Buyer"
     Buyer.create_table()
+    print "\t- Bottle"
     Bottle.create_table()
+    print "\t- Price"
     Price.create_table()
+    print "\t- Bank"
+    Bank.create_table()
+    print "\t- FillLog"
+    FillLog.create_table()
 
     # Time to add some data to the model
     fillers = ["Chuck Norris", "Frank Sinatra", "Sylvester Stallone"]
     for f in fillers:
         print "Adding filler: %s" % f
-        t = Filler.create(name=f)
-        t.save()
+        Filler.create(name=f).save()
 
     buyers = ["Barnaby Hughard", "Mellan Vittorio", "Rustam Ori", "Carver Jakob"]
     sizes = [3, 7, 10, 12, 24, 30]
@@ -61,14 +91,18 @@ def create_db():
         t = Buyer.create(name=b)
         t.save()
         for x in range(3):
-            b1 = Bottle.create(owner = t, size = random.choice(sizes), maxpres = random.choice(pres))
-            b1.save()
+            Bottle.create(owner = t, size = random.choice(sizes), maxpres = random.choice(pres)).save()
 
     print "Adding to pricelist"
-    p1 = Price.create(name="O2", price=0.05)
-    p1.save()
-    p2 = Price.create(name="HE", price=0.5)
-    p2.save()
+    Price.create(name="O2", price=0.05).save()
+    Price.create(name="HE", price=0.5).save()
+
+    # Bank
+    print "Adding banks"
+    for gas in ["HE", "O2"]:
+        print "Bank: %s" % gas
+        Bank(name = gas, volume = 50, cur_pressure = 200, max_pressure = 200).save()
+
     print "done."
 
 
