@@ -220,9 +220,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.LuftFyllTrycklabel.setText(str(int(self.gas_calc.getAirFillPressure())))
                                        
-
-                self.HeTank = Tank(0, 0, 100, 100, self.HeBankSize, self.pHebank, 0)
-                self.O2Tank = Tank(100, 100, 0, 0, self.O2BankSize, self.pO2bank, 0)
+                print "self.HeBankSize: %f" %  self.HeBankSize
+                print "self.pHebank: %f" %  self.pHebank
+                
+                self.HeTank = Tank(0, 0, 1, 1, self.HeBankSize, self.pHebank, 0)
+                self.O2Tank = Tank(1, 1, 0, 0, self.O2BankSize, self.pO2bank, 0)
             except GasCalcError as e:
                 self.message(str(e))
                 return
@@ -278,7 +280,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         min_start = He_min_start
                         
                 
-                if O2BankEndPressure < HeBankEndPressure:
+                if (O2BankEndPressure < HeBankEndPressure) and self.fHe_old != 0:
 
                     #Start with O2, since it has the lowest end pressure in this case
                     if O2BankEndPressure < O2EndPressure:
@@ -293,7 +295,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                      self.gas_calc.getHeFillPressure())
                         dump = True
 
-                else:
+                elif self.fHe_old != 0:
                     #Start with He, since it has the lowest end pressure in this case
                     
                     HeEndPressure = self.gas_calc.getO2EndPressure(self.gas_calc.getTankPressure())
@@ -311,6 +313,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                      self.gas_calc.getO2FillPressure())
                         dump = True
 
+                else: 
+                    #Start with O2, since it has the lowest end pressure in this case
+                    if O2BankEndPressure < O2EndPressure:
+                        O2min_start = O2BankEndPressure - self.gas_calc.getO2FillPressure()
+                        dump = True
+                        if O2min_start < min_start:
+                            min_start = O2min_start
+
                 if dump:
                     self.message("Slapp ut gas till %d Bar är kvar i flaskan och starta sedan om fyllningen" % min_start)
                     self.gas_calc.setStartPressure(min_start)                   
@@ -320,19 +330,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.updateUiStart()
                     return
                     
-                if O2BankEndPressure < HeBankEndPressure:                   
+                if (O2BankEndPressure < HeBankEndPressure) and self.fHe_old != 0:                   
                     O2EndPressure = self.gas_calc.getO2EndPressure(self.gas_calc.getTankPressure())
                     HeEndPressure = self.gas_calc.getHeEndPressure(O2EndPressure)   
                     self.message("Fyll Oxygen till %d Bar" % O2EndPressure)                
                     self.message("Fyll Helium till %d Bar" % self.gas_calc.getHeEndPressure(O2EndPressure))
                     self.message("Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
-                else:                   
+                elif  self.fHe_old != 0:                   
                     HeEndPressure = self.gas_calc.getHeEndPressure(self.gas_calc.getTankPressure())
                     O2EndPressure = self.gas_calc.getHeEndPressure(HeEndPressure)   
                     self.message("Fyll Helium till %d Bar" % HeEndPressure)                
-                    self.message("Fyll Helium till %d Bar" % O2EndPressure)
+                    self.message("Fyll Oxygen till %d Bar" % O2EndPressure)
                     self.message("Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
-                    
+                else:
+                    O2EndPressure = self.gas_calc.getHeEndPressure(HeEndPressure)   
+                    self.message("Fyll Oxygen till %d Bar" % O2EndPressure)
+                    self.message("Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
+
+                
                 self.O2AnalyseratlineEdit.setFocus()
                 
               
