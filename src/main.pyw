@@ -51,7 +51,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.O2BankVolymlineEdit.setText(str(self.db.getO2BankVolume()))                                         
             self.O2BankTryckBeforelineEdit.setText(str(self.db.getO2BankPressure()))
 
-            self.FyllNrlabel.setText(str(self.db.getFillNr()))
+            self.FyllNrlabel.setText(self.db.getFillNr())
             
 
             # Connect GUI actions with functions
@@ -108,6 +108,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.PaymentpushButton.setEnabled(disable)
             self.AnalyzeReadypushButton.setEnabled(disable)
             self.startFillpushButton.setEnabled(enable)
+            self.FyllNrlabel.setText(self.db.getFillNr())
 
         def updateUiAfterFill(self):
             self.prCalcpushButton.setEnabled(disable)
@@ -200,6 +201,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.HeBankSize = int(self.HeBankVolymlineEdit.text())
 
             self.customer = self.gasBuyercomboBox.currentText()
+            self.filler   = self.fillercomboBox.currentText()
                             
             fO2_new   = int(self.finalPO2lineEdit.text()) * 0.01
             fHe_new   = int(self.finalPHelineEdit.text()) * 0.01
@@ -234,7 +236,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         def on_startFillpushButton_clicked(self):
             try:
-
 
                      
                 O2BankEndPressure = self.O2Tank.getEndPressure(self.gas_calc.getFilledO2Gas());
@@ -336,16 +337,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.message("Fyll Oxygen till %d Bar" % O2EndPressure)                
                     self.message("Fyll Helium till %d Bar" % self.gas_calc.getHeEndPressure(O2EndPressure))
                     self.message("Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
+                    filledHe = gas_calc.getFilledHeGas()
+                    filledO2 = gas_calc.getFilledO2Gas() 
+                    self.db.write_filled_gas(self.filler, self.customer,
+                                             self.gas_calc.filledO2Gas(), self.gas_calc.filledHeGas())
                 elif  self.fHe_old != 0:                   
                     HeEndPressure = self.gas_calc.getHeEndPressure(self.gas_calc.getTankPressure())
                     O2EndPressure = self.gas_calc.getHeEndPressure(HeEndPressure)   
                     self.message("Fyll Helium till %d Bar" % HeEndPressure)                
                     self.message("Fyll Oxygen till %d Bar" % O2EndPressure)
                     self.message("Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
+                    filledHe = gas_calc.getFilledHeGas()
+                    filledO2 = gas_calc.getFilledO2Gas() 
+                    self.db.write_filled_gas(self.filler, self.customer,
+                                             self.gas_calc.filledO2Gas(), self.gas_calc.filledHeGas())
+
                 else:
                     O2EndPressure = self.gas_calc.getHeEndPressure(HeEndPressure)   
                     self.message("Fyll Oxygen till %d Bar" % O2EndPressure)
                     self.message("Fyll luft till %d Bar" % int(self.finalPressurelineEdit.text()))
+                    filledHe = self.gas_calc.getFilledHeGas()
+                    filledO2 = self.gas_calc.getFilledO2Gas() 
+                    self.db.write_filled_gas(self.filler, self.customer,
+                                             self.gas_calc.filledO2Gas(), self.gas_calc.filledHeGas())
+
 
                 
                 self.O2AnalyseratlineEdit.setFocus()
@@ -398,9 +413,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
 
             #Calculate the price
-            HeCost = filledHe * self.db.getHePrice().price
-            O2Cost = filledO2 * self.db.getO2Price().price
-            self.Prislabel.setText(str(round(HeCost + O2Cost, 2)))
+            HeCost = filledHe * int(self.db.getHePrice()) * 0.01
+            O2Cost = filledO2 * int(self.db.getO2Price()) * 0.01
+            tot_cost = str(round(HeCost + O2Cost, 2))
+            self.Prislabel.setText(tot_cost) 
+
+            self.db.writeAnalyzedGas(self.O2AnalyseratlineEdit.text(), str(round(filledO2, 2)),
+                                     self.HeAnalyseratlineEdit.text(), str(round(filledHe, 2)),
+                                     tot_cost, self.tankName)
+                                             
                 
             self.updateUiAfterAnalyze()
 
@@ -414,9 +435,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.O2AnalyseratlineEdit.setText("")
             self.HeAnalyseratlineEdit.setText("")
             self.luftAnalyseratlineEdit.setText("")
-
+            
             self.db.moneyToPay(self.Prislabel.text(), self.customer)
             self.gasBuyercomboBox.setFocus()
+
+            
             
             self.updateUiFill()
                 
@@ -427,7 +450,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.updateUiStart()
 
         def on_tankNrcomboBox_changed(self, arg):
-            size = self.db.getBottleSize(arg,self.gasBuyercomboBox.currentText())
+            size = self.db.getBottleSize(arg)
+            self.tankName = arg.strip()
             self.bottleSizecomboBox.setCurrentIndex(self.bottleSizecomboBox.findText(size))
             max_press = self.db.getBottleMaxPress(arg,self.gasBuyercomboBox.currentText())
             self.maxTryckcomboBox.setCurrentIndex(self.maxTryckcomboBox.findText(max_press))

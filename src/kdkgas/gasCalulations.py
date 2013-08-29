@@ -46,6 +46,12 @@ class Tank(object):
  
     def getFilledO2Gas(self):
         return self.gas_calc.getFilledO2Gas()
+ 
+    def filledO2Gas(self):
+        return self.gas_calc.filledO2Gas()
+
+    def filledHeGas(self):
+        return self.gas_calc.filledHeGas()
     
     def getFilledGas(self, oldP, newP, size):
         oldP_pascal = self.barToPascal(oldP)
@@ -110,6 +116,12 @@ class GasCalculations(object):
     def getFilledO2Gas(self):
         self.calculateGasToFill()
         return self.amountO2ToFill
+    
+    def filledO2Gas(self):
+        return self.amountO2ToFill * 1000
+
+    def filledHeGas(self):
+        return self.amountHeToFill * 1000
 
     def getFilledGas(self, oldP, newP, size):
         return (self.calcAmount(oldP, size, self.fO2_old, self.fHe_old) -

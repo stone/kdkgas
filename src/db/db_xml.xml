@@ -1,0 +1,27 @@
+<db_top>
+	<general HE="21" O2="20" fillNr="4">
+	</general>
+	<filler name="fill1" />
+	<filler name="fill2" />
+	<filler name="fill3" />
+	<filler name="fill4" />
+	<customer name="cust1"> 
+		<tankName name="T1" />
+		<tankName name="T2" />
+	</customer>
+	<customer name="cust2">
+		<tankName name="T3" />
+	</customer>
+	<customer name="cust3"> 
+		<tankName name="T4" />
+		<tankName name="T2" />
+	</customer>
+	<tank lastHe="0" lastO2="21" maxPressure="200" name="T1" size="12">
+	</tank>
+	<tank lastHe="0" lastO2="30" maxPressure="232" name="T2" size="24">
+	</tank>
+	<tank lastHe="0" lastO2="39" maxPressure="300" name="T3" size="10">
+	</tank>
+	<tank lastHe="0" lastO2="21" maxPressure="200" name="T4" size="15">
+	</tank>
+</db_top>

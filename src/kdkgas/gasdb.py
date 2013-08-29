@@ -1,125 +1,29 @@
-from peewee import *
+from xml.etree.ElementTree import ElementTree
 import datetime
 import os.path
-"""Here we handle our databases, we use PeeWee for abstraction:
+import os
 
-Website: https://github.com/coleifer/peewee
-
-"""
-
-DATABASEPATH="db/kdkgaspw.db"
-
-db = SqliteDatabase(DATABASEPATH)
-
-class BaseModel(Model):
-    class Meta:
-        database = db
-
-class Filler(BaseModel):
-    """The person that are allowed to mix gas and fill """
-    name = CharField()
-
-class Buyer(BaseModel):
-    """The person that is buying gas """
-    name = CharField()
-
-class Bottle(BaseModel):
-    """A Bottle used for gas"""
-    owner = ForeignKeyField(Buyer, related_name='buyer')
-    size = IntegerField()
-    maxpres = IntegerField()
-
-class Price(BaseModel):
-    """Price of gas"""
-    name = CharField()
-    price = FloatField()
-
-class Bank(BaseModel):
-    """Gas bank"""
-    name = CharField()
-    volume = FloatField()
-    cur_pressure = FloatField()
-    max_pressure = FloatField()
-
-class Gas(BaseModel):
-    """Used in FillLog to keep track of amount of gas filled"""
-    name = CharField()
-    volume = FloatField()
-
-class FillLog(BaseModel):
-    """Log of filles, who, when what..."""
-    fill_date = DateTimeField(default=datetime.datetime.now)
-    bottle = ForeignKeyField(Bottle, related_name='bottle')
-    filler = ForeignKeyField(Filler, related_name='filler')
-    buyer = ForeignKeyField(Buyer, related_name='buyer')
-    gas_amount = ForeignKeyField(Gas, related_name='gas')
-    start_pressure = FloatField()
-    end_pressure = FloatField()
+LOGFILEPTH="db/logfile.txt"
+XMLDATABASEPATH = "db/db_xml.xml"
 
 
 def create_db():
-    """This needs to be called on when first creating the database,
-    it generates some test data. """
-    import random
-    print "Creating database, filling with test data, hang on..."
-    print "Creating tables..."
-
-    print "\t- Filler"
-    Filler.create_table()
-    print "\t- Buyer"
-    Buyer.create_table()
-    print "\t- Bottle"
-    Bottle.create_table()
-    print "\t- Price"
-    Price.create_table()
-    print "\t- Bank"
-    Bank.create_table()
-    print "\t- FillLog"
-    FillLog.create_table()
-
-    # Time to add some data to the model
-    fillers = ["Chuck Norris", "Frank Sinatra", "Sylvester Stallone"]
-    for f in fillers:
-        print "Adding filler: %s" % f
-        Filler.create(name=f).save()
-
-    buyers = ["Barnaby Hughard", "Mellan Vittorio", "Rustam Ori", "Carver Jakob"]
-    sizes = [3, 7, 10, 12, 24, 30]
-    pres = [200,232,300]
-    for b in buyers:
-        print "Adding Buyer: %s" % b
-        t = Buyer.create(name=b)
-        t.save()
-        for x in range(3):
-            Bottle.create(owner = t, size = random.choice(sizes), maxpres = random.choice(pres)).save()
-
-    print "Adding to pricelist"
-    Price.create(name="O2", price=0.05).save()
-    Price.create(name="HE", price=0.5).save()
-
-    # Bank
-    print "Adding banks"
-    for gas in ["HE", "O2"]:
-        print "Bank: %s" % gas
-        Bank(name = gas, volume = 50, cur_pressure = 200, max_pressure = 200).save()
-
-    print "done."
-
-
+  print "create DB"
 
 
 class dataBaseInterface(object):
-    """Class used for databas interfacing"""
-
+ 
     def __init__(self):
-        if not os.path.isfile(DATABASEPATH):
-            create_db()
+        
+        self.tree = ElementTree("db_top", XMLDATABASEPATH)
+        
+        if not os.path.isfile(LOGFILEPTH):
+            self.log = open(LOGFILEPTH, "a")
+            self.log.write("date\tfiller\tcustomer\tfilled O2\t filled HE\tO2 from Bank\tanalyzed O2\tHe From Bank\tanalyzed HE\tprice\n")
+        else:
+            self.log = open(LOGFILEPTH, "a")
+            self.log.write("\n")
 
-    #######################################################
-    #
-    #  Section with new Database calls:
-    #
-    #######################################################
     def getHeBankVolume(self):
         return 50
     
@@ -140,39 +44,88 @@ class dataBaseInterface(object):
 
     def moneyToPay(self, price, customer):
         print customer + "skall betala " + price + " kr"
-
-    #######################################################
-    
+        
     def getFillers(self):
-        fillersdict = {}
-        for f in Filler.select():
-            fillersdict[f.name] = f.id
+        fillersdict = []
+        for item in self.tree.getiterator('filler'):
+            fillersdict.append(item.get('name').strip())
         return fillersdict
 
     def getBuyers(self):
-        buyerslist = []
-        for b in Buyer.select():
-            buyerslist.append(b.name)
-        return buyerslist
+        buyerDict = []
+        for item in self.tree.getiterator('customer'):
+            buyerDict.append(item.get('name').strip())
+        return buyerDict
 
     def getBottles(self, buyer):
-        """Get the different bottles for buyer and return size in L and max pressure in BAR"""
-        bottledict = {}
-        for bottle in Bottle.select().join(Buyer).where(Buyer.name == buyer):
-            bottledict["%sL (%dBAR)" % (bottle.size, bottle.maxpres)] = bottle.id
-        return bottledict
+        bottleDict = []
+        for item in self.tree.getiterator('customer'):
+            if item.get('name').strip() == buyer:
+                tankList = item.getchildren()
+                for tank in tankList:
+                    bottleDict.append(tank.get('name').strip())
 
-    def getBottleSize(self, bottle, owner):
-        return "12"
+        return bottleDict
+        
+
+    def getBottleSize(self, bottle):
+        for item in self.tree.getiterator('tank'):
+            if item.get('name').strip() == bottle:
+                return item.get('size').strip()
+        return "0"
     
     def getBottleMaxPress(self, bottle, owner):
-        return "200"
-
-    def getFillNr(self):
-        return 1
+        for item in self.tree.getiterator('tank'):
+            if item.get('name').strip() == bottle:
+                return item.get('maxPressure').strip()
+        return "0"
 
     def getHePrice(self):
-        return Price.select().where(Price.name == 'HE').get()
+        return self.tree.find('general').get('HE').strip()
     
     def getO2Price(self):
-        return Price.select().where(Price.name == 'O2').get()
+        return self.tree.find('general').get('O2').strip()
+
+    def getFillNr(self):
+            return self.tree.find('general').get('fillNr').strip()
+
+    def saveDb(self):
+        print "save the DB"
+        self.tree.write("db_temp.xml")
+        os.remove(XMLDATABASEPATH)
+        os.rename("db_temp.xml", XMLDATABASEPATH)
+        
+    def write_filled_gas(self, filler, customer, nO2, nHe):
+        print "date: %s" % datetime.datetime.now()
+        print "filler %s" % filler
+        print "customer %s" % customer
+        print "O2: %s" % nO2
+        print "He: %s " % nHe
+        gen = self.tree.find('general')
+        fillnr = gen.get('fillNr').strip()
+        self.log.write("%s\t%s\t%s\t%s\t%s\t%s\t" % (datetime.datetime.now(), fillnr, filler, customer, nO2, nHe))
+        self.log.flush()
+        gen.set('fillNr', str(int(fillnr)+1))
+        self.saveDb()
+
+    def writeAnalyzedGas(self, fO2, nO2, fHe, nHe, price, bottle):
+        self.log.write("%s\t%s\t%s\t%s\t%s\n" % (nO2, fO2, nHe, fHe, price)) 
+        self.log.flush()      
+        for item in self.tree.getiterator('tank'):
+            if item.get('name').strip() == bottle:
+                item.set('lastHe', fHe)
+                item.set('lastO2', fO2)
+        self.saveDb()
+        
+if __name__ == '__main__':
+
+    tst = tst_xml()
+    fillers = tst.getFillers()
+    print fillers
+    buyers = tst.getBuyers()
+    print buyers
+    botles = tst.getBottles('cust1')
+    print botles
+    print tst.getO2Price()
+    print tst.getHePrice()
+    
