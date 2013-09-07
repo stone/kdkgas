@@ -1,5 +1,5 @@
 <db_top>
-	<general HE="21" O2="20" fillNr="4">
+	<general HE="21" O2="20" fillNr="6">
 	</general>
 	<filler name="fill1" />
 	<filler name="fill2" />
@@ -20,8 +20,8 @@
 	</tank>
 	<tank lastHe="0" lastO2="30" maxPressure="232" name="T2" size="24">
 	</tank>
-	<tank lastHe="0" lastO2="39" maxPressure="300" name="T3" size="10">
+	<tank lastHe="0" lastO2="30" maxPressure="300" name="T3" size="10">
 	</tank>
 	<tank lastHe="0" lastO2="21" maxPressure="200" name="T4" size="15">
 	</tank>
-</db_top>
+<filler name="tst1" /><filler name="tst2" /><filler name="tst3" /><customer name="cust10" /></db_top>

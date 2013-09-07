@@ -71,15 +71,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.updateUiStart()
 
         def addDbActions(self):            
-            addFillerAction = QAction('&Addera fyllare', self)
-            addFillerAction.setStatusTip('Lagg till en person som kan fylla gas')
+            addFillerAction = QAction('&Addera gas blandare', self)
+            addFillerAction.setStatusTip('Lagg till en person som kan blanda gas')
             addFillerAction.triggered.connect(self.addFiller)
 
             addBuyerAction = QAction('Addera gaskopare', self)
             addBuyerAction.setStatusTip('Lagg till en person som kan kopa gas')
+            addBuyerAction.triggered.connect(self.addByuer)
 
             addTankAction = QAction('Ny flaska', self)
             addTankAction.setStatusTip('Lagg till en ny flaska')
+            addTankAction.triggered.connect(self.addTank)
+
+            TankToCustomerAction = QAction('Koppla kund till Flask', self)
+            TankToCustomerAction.setStatusTip('Låt kunden kunna köpa gas till en till flaska')
+            TankToCustomerAction.triggered.connect(self.TankToCustomer)
             
 
             #Add databas menu
@@ -87,14 +93,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dbMenu.addAction(addFillerAction)
             dbMenu.addAction(addBuyerAction)
             dbMenu.addAction(addTankAction)
+            dbMenu.addAction(TankToCustomerAction)
 
         def addFiller(self):
-            self.message("En ny fyllare skall laggas till")  
+            text, ok = QInputDialog.getText(self, 'Input Dialog', 
+            'Blenders namn:')
+        
+            if ok:
+                self.db.addBlender(str(text).strip())
+                for i in range(0, self.fillercomboBox.count()):
+                    self.fillercomboBox.removeItem(0)
+                self.fillercomboBox.addItem("")
+                for item in self.db.getFillers():
+                    self.fillercomboBox.addItem(item)
+                
+            
+                
         def addByuer(self):
-            self.message("En ny kund skall laggas till")  
+            text, ok = QInputDialog.getText(self, 'Input Dialog', 
+            'Köparens namn:')
+        
+            if ok:
+                self.db.addCustomer(str(text).strip())
+                for i in range(0, self.gasBuyercomboBox.count()):
+                    self.gasBuyercomboBox.removeItem(0)
+                self.gasBuyercomboBox.addItem("")
+                for item in self.db.getBuyers():
+                    self.gasBuyercomboBox.addItem(item)
+            
+            
         def addTank(self):
             self.message("En ny flaska skall laggas till")         
 
+        def TankToCustomer(self):
+            if self.checkForEmpty("Gaskund maste vara ifyllt", self.gasBuyercomboBox):
+                return
+
+            bottleList = self.db.getAllBottles()
+            bottle = QInputDialog.getItem(self, 'Välj flaska dialog', 'Välj flask', bottleList)
+            if bottle[1]:
+                self.db.addBottlesToCustomer(str(bottle[0]), self.gasBuyercomboBox.currentText())
+                for item in self.db.getBottles(arg):
+                    self.tankNrcomboBox.addItem(item)
         
             
         def updateUiStart(self):

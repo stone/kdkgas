@@ -1,4 +1,4 @@
-
+import math
 
 R = 8314.0
 T = 293.0
@@ -6,10 +6,22 @@ T = 293.0
 fO2_air = 0.21
 fN_air = 0.79
 
-vwCoeff_O2 = {"a":0.1378, "b":0.00003186}
+##vwCoeff_O2 = {"a":0.1378, "b":0.00003186}
+##vwCoeff_nitrox = {"a":0.1370, "b":0.0003870}
+##vwCoeff_nitrogen = {"a":0.1370, "b":0.0003870}
+##vwCoeff_helium = {"a":0.00346, "b":0.00002380}
+##vwCoeff_air = {"a":0.13725, "b":0.000372}
+
+vwCoeff_O2 = {"a":0.1382, "b":0.00003186}
 vwCoeff_nitrox = {"a":0.1370, "b":0.0003870}
+vwCoeff_nitrogen = {"a":0.1370, "b":0.00003870}
 vwCoeff_helium = {"a":0.00346, "b":0.00002380}
 vwCoeff_air = {"a":0.13725, "b":0.000372}
+
+
+
+vwCoeffA = [vwCoeff_helium["a"], vwCoeff_O2["a"], vwCoeff_nitrogen["a"]]
+vwCoeffB = [vwCoeff_helium["b"], vwCoeff_O2["b"], vwCoeff_nitrogen["b"]]
 
 class GasCalcError(Exception):
     pass
@@ -291,16 +303,19 @@ class GasCalculations(object):
             #print "F"
             return False
 
+    def calcAB(self, f, const):
+        ab = 0
+        for f_yttre, ab_yttre in zip(f, const):                                     
+            for f_inre, ab_inre in zip(f, const):
+                ab += math.sqrt(ab_yttre*ab_inre)* f_yttre*f_inre
+
+        return ab
+                       
+
+
     def getAB(self, fO2, fHe):
- 
-        if fO2 == 1:
-            return vwCoeff_O2
-        elif self.fHe_new == 1:
-            return vwCoeff_helium
-        elif fO2 < 0.25 and fHe == 0:
-            return vwCoeff_nitrox
-        elif fHe == 0:
-            return vwCoeff_air
+        gas_array = [fHe, fO2, 1-fHe-fO2]
+        return {"a": self.calcAB(gas_array, vwCoeffA), "b": self.calcAB(gas_array, vwCoeffB)}
             
     def recCalcAmount(self, n1, p1, n2, p2, p, v, fO2, fHe):
 
@@ -379,4 +394,13 @@ if __name__ == '__main__':
         p = g_o2.calcPressure_norm(12, n)
         p1 = g_o2.calcPressure(12, n1, 1, 0)
         print "n: %d, n1: %d, p: %d, p1: %f" % (n, n1, p*1e-5, p1*1e-5)
+    
+
+    t = [0, 0.21, 0.79]
+    luftA = g.calcAB(t, vwCoeffA)
+    luftB = g.calcAB(t, vwCoeffB)
+
+    print "LuftA: %f, luftB: %g" %(luftA, luftB)
+    print "O2 A : %g, O2 B : %g" %(g.calcAB([0, 1, 0], vwCoeffA), g.calcAB([0, 1, 0], vwCoeffB))
+
     

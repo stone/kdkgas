@@ -1,3 +1,4 @@
+import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import ElementTree
 import datetime
 import os.path
@@ -57,6 +58,13 @@ class dataBaseInterface(object):
             buyerDict.append(item.get('name').strip())
         return buyerDict
 
+
+    def getAllBottles(self):
+        bottleDict = []
+        for item in self.tree.getiterator('tank'):
+          bottleDict.append(item.get('name'))
+        return bottleDict                 
+            
     def getBottles(self, buyer):
         bottleDict = []
         for item in self.tree.getiterator('customer'):
@@ -89,6 +97,26 @@ class dataBaseInterface(object):
     def getFillNr(self):
             return self.tree.find('general').get('fillNr').strip()
 
+    def addBlender(self, blender):
+        current = ET.SubElement(self.tree.getroot(), 'filler')
+        current.set('name', blender.strip())
+        self.saveDb()
+
+    def addCustomer(self, customer):
+      current = ET.SubElement(self.tree.getroot(), 'customer')
+      current.set('name', customer.strip())
+      self.saveDb()
+
+    def addBottleToCustomer(self, bottle, customer):
+        for item in self.tree.getiterator('customer'):
+            if item.get('name').strip() == buyer.strip():
+                current = ET.SubElement(item, 'tankName')
+                current.set('name', bottle.strip())
+                self.saveDb()
+                return
+
+
+            
     def saveDb(self):
         print "save the DB"
         self.tree.write("db_temp.xml")
@@ -116,7 +144,8 @@ class dataBaseInterface(object):
                 item.set('lastHe', fHe)
                 item.set('lastO2', fO2)
         self.saveDb()
-        
+
+                             
 if __name__ == '__main__':
 
     tst = tst_xml()
