@@ -97,23 +97,56 @@ class dataBaseInterface(object):
     def getFillNr(self):
             return self.tree.find('general').get('fillNr').strip()
 
-    def addBlender(self, blender):
-        current = ET.SubElement(self.tree.getroot(), 'filler')
-        current.set('name', blender.strip())
-        self.saveDb()
+    def addBlender(self, blender_in):
+      blender = blender_in.strip()
+      if blender in self.getFillers():
+        return False
+      
+      current = ET.SubElement(self.tree.getroot(), 'filler')
+      current.set('name', blender.strip())
+      self.saveDb()
+      return True
 
-    def addCustomer(self, customer):
+    def addTank(self, name_in, size, max_press):
+
+      name = name_in.strip()
+      if name in self.getAllBottles():
+        return False
+      
+      current = ET.SubElement(self.tree.getroot(), 'tank')
+      current.set('name', name)
+      current.set('size', size.strip())
+      current.set('lastHe' ,"0")
+      current.set('lastO2', "0")
+      current.set('maxPressure', max_press.strip())
+      self.saveDb()
+      return True
+      
+
+    def addCustomer(self, customer_in):
+      customer = customer_in.strip()
+      if customer in self.getBuyers():
+        return False
+          
       current = ET.SubElement(self.tree.getroot(), 'customer')
       current.set('name', customer.strip())
       self.saveDb()
+      return True
 
-    def addBottleToCustomer(self, bottle, customer):
+    def addBottleToCustomer(self, bottle_in, customer):
+
+        bottle = bottle_in.strip()
+        if bottle in self.getBottles(customer):
+          return False
+        
         for item in self.tree.getiterator('customer'):
-            if item.get('name').strip() == buyer.strip():
+            if item.get('name').strip() == customer.strip():
                 current = ET.SubElement(item, 'tankName')
-                current.set('name', bottle.strip())
+                current.set('name', bottle)
                 self.saveDb()
-                return
+                return True
+
+        return False
 
 
             

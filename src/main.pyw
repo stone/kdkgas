@@ -3,8 +3,10 @@ import sys
 from PySide.QtGui import *
 from PySide import QtCore
 from kdkgas.mainWindow import Ui_MainWindow
+from kdkgas.addTank import Ui_addTank
 from kdkgas.gasdb import *
 from kdkgas.gasCalulations import *
+
 
 enable = True
 disable = False
@@ -12,13 +14,76 @@ disable = False
 max_pressure_list = {"200", "232", "300"}
 bottle_size_list = {"4", "6", "7", "8", "10", "12", "14", "15", "24", "30"}
 
+class addTankWindow(QMainWindow, Ui_addTank):
+    def __init__(self, parent=None):
+        super(addTankWindow, self).__init__(parent)
+        self.setupUi(self)
+
+        
+        # Connect GUI actions with functions
+        self.OKPushButton.clicked.connect(self.OKButton_clicked)
+        self.CancelPushButton.clicked.connect(self.cancelPushButton_clicked)
+
+        # Fill GUI
+        for item in max_pressure_list:
+            self.MaxPressComboBox.addItem(item)
+
+        for item in bottle_size_list:
+            self.bottleSizeComboBox.addItem(item)
+
+    def get_db(self, big_db):
+        self.db = big_db;
+    
+    def message(self, string):
+        QMessageBox.information(self,
+                                "kdkGas information", string)
+
+    def checkForEmpty(self, string, obj):
+
+        if isinstance(obj, QComboBox):
+            check = obj.currentText()
+        elif isinstance(obj, QLineEdit):
+            check = obj.text()
+            
+        if check == "":
+            self.message(string)
+            obj.setFocus()
+            return True
+        else:
+            return False
+            
+    def OKButton_clicked(self):
+        try:
+            # Check that all fields are filled in
+            if self.checkForEmpty("Flaskans namn (ID) måste vara ifyllt", self.NamelineEdit):
+                return
+            if self.checkForEmpty("Sorleken på flaskan måste vara ifyllt", self.bottleSizeComboBox):
+                return
+            if self.checkForEmpty("Flaskans arbetstryck måste vara ifyllt", self.MaxPressComboBox):
+                return
+
+            if self.db.addTank(self.NamelineEdit.text().strip(), self.bottleSizeComboBox.currentText(),
+                                self.MaxPressComboBox.currentText()):
+                self.setVisible(False)
+            else:
+                self.message("Flaskan finns redan i databasen, byt namn på flaskan.")
+
+            
+        except Exception as e:
+            self.message(str(e))
+
+        
+    def cancelPushButton_clicked(self):
+        self.setVisible(False)
+    
 class MainWindow(QMainWindow, Ui_MainWindow):
     try:
-        def __init__(self, parent=None):
+        def __init__(self, child, parent=None):
             super(MainWindow, self).__init__(parent)
             self.setupUi(self)
 
             self.db = dataBaseInterface()
+            child.get_db(self.db)
 
             # Create actions
             exitAction = QAction('&Exit', self)
@@ -100,7 +165,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             'Blenders namn:')
         
             if ok:
-                self.db.addBlender(str(text).strip())
+                if not self.db.addBlender(str(text).strip()):
+                    self.message("Namnet finns redan som 'blender' i databasen, välj ett annat namn")
+                    return
+                
                 for i in range(0, self.fillercomboBox.count()):
                     self.fillercomboBox.removeItem(0)
                 self.fillercomboBox.addItem("")
@@ -114,27 +182,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             'Köparens namn:')
         
             if ok:
-                self.db.addCustomer(str(text).strip())
-                for i in range(0, self.gasBuyercomboBox.count()):
-                    self.gasBuyercomboBox.removeItem(0)
-                self.gasBuyercomboBox.addItem("")
-                for item in self.db.getBuyers():
-                    self.gasBuyercomboBox.addItem(item)
+                if self.db.addCustomer(str(text).strip()):
+                    for i in range(0, self.gasBuyercomboBox.count()):
+                        self.gasBuyercomboBox.removeItem(0)
+                    self.gasBuyercomboBox.addItem("")
+                    for item in self.db.getBuyers():
+                        self.gasBuyercomboBox.addItem(item)
+                else:
+                    self.message ("Kunden finns redan i databasen, välj ett annat namn")
+            else:
+                self.message("Kunden kunde inte lägags till databasen")
             
             
         def addTank(self):
-            self.message("En ny flaska skall laggas till")         
+            tankFrame.show()        
 
         def TankToCustomer(self):
             if self.checkForEmpty("Gaskund maste vara ifyllt", self.gasBuyercomboBox):
                 return
 
+            customer = self.gasBuyercomboBox.currentText().strip()
+
             bottleList = self.db.getAllBottles()
             bottle = QInputDialog.getItem(self, 'Välj flaska dialog', 'Välj flask', bottleList)
             if bottle[1]:
-                self.db.addBottlesToCustomer(str(bottle[0]), self.gasBuyercomboBox.currentText())
-                for item in self.db.getBottles(arg):
-                    self.tankNrcomboBox.addItem(item)
+                bottle = str(bottle[0]).strip()
+                if self.db.addBottleToCustomer(bottle, customer):
+                    for i in range(0, self.tankNrcomboBox.count()):
+                        self.tankNrcomboBox.removeItem(0)
+                    for item in self.db.getBottles(customer):
+                        self.tankNrcomboBox.addItem(item)
+            else:
+                message("Denna flaska kan redan fyllas av den här kunden!")
         
             
         def updateUiStart(self):
@@ -502,7 +581,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
        
 app = QApplication(sys.argv)
-frame = MainWindow()
+tankFrame = addTankWindow()
+frame = MainWindow(tankFrame)  
 frame.show()    
 app.exec_()
 
